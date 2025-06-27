@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>價格顯示</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Microsoft JhengHei, Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .display-container {
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        h1 {
+            font-size: 3em;
+            margin-bottom: 30px;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+        
+        .price-table {
+            width: 100%;
+            height: 100vh;
+            border-collapse: collapse;
+            font-size: 5em;
+            margin: 0 auto;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            flex-grow: 1;
+            display: table;
+            table-layout: fixed;
+        }
+        
+        .price-table th,
+        .price-table td {
+            padding: 30px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            vertical-align: middle;
+        }
+        
+        .price-table th {
+            background-color: rgba(255,215,0,0.3);
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .price-table td:first-child {
+            font-weight: bold;
+            color: #FFF;
+            background-color: rgba(255,255,255,0.1);
+            text-align: left;
+        }
+        
+        .price-table td:last-child {
+            color: #90EE90;
+            font-weight: bold;
+        }
+        
+        .price-table td:nth-child(2),
+        .price-table td:nth-child(3) {
+            color: #90EE90;
+            font-weight: bold;
+        }
+        
+        .price-table thead {
+            display: table-header-group;
+        }
+        
+        .price-table tbody {
+            display: table-row-group;
+            height: 100%;
+        }
+        
+        .price-table tbody tr {
+            height: 25%;
+        }
+        
+        .price-table tr:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        .empty-message {
+            font-size: 1.5em;
+            color: #ccc;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        
+        .exit-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.8em;
+            color: #888;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="display-container">
+        <div id="content">
+            <div class="empty-message">等待價格資料...</div>
+        </div>
+    </div>
+    
+    <div class="exit-hint">
+        按 ESC 鍵退出全螢幕
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        // 接收顯示資料
+        ipcRenderer.on('display-data', (event, data) => {
+            displayPriceTable(data);
+        });
+        
+        function displayPriceTable(data) {
+            const contentDiv = document.getElementById('content');
+            
+            // 過濾有值的資料
+            console.log('data: ', data);
+            const filteredData = {};
+            Object.keys(data).forEach(key => {
+                if (data[key] && Array.isArray(data[key])) {
+                    filteredData[key] = data[key]
+                }
+            });
+            console.log('filteredData: ', filteredData);
+            
+            if (Object.keys(filteredData).length === 0) {
+                contentDiv.innerHTML = '<div class="empty-message">無價格資料可顯示</div>';
+                return;
+            }
+            
+            const today = new Date()
+            const dateFormatter = Intl.DateTimeFormat('sv-SE');
+            // 建立表格
+            let tableHTML = `
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>${dateFormatter.format(today)}</th>
+                            <th>賣出</th>
+                            <th>買進</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            Object.keys(filteredData).forEach(name => {
+                tableHTML += `
+                    <tr>
+                        <td>${name}</td>
+                        <td>${filteredData[name][0]}</td>
+                        <td>${filteredData[name][1]}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            contentDiv.innerHTML = tableHTML;
+        }
+        
+        // 鍵盤事件處理
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                window.close();
+            }
+        });
+    </script>
+</body>
+</html>
