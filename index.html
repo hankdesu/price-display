@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>價格輸入</title>
@@ -10,20 +11,20 @@
             background-color: #f5f5f5;
             margin: 0;
         }
-        
+
         .container {
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        
+
         h1 {
             text-align: center;
             color: #333;
             margin-bottom: 20px;
         }
-        
+
         .input-group {
             display: flex;
             margin-bottom: 15px;
@@ -33,14 +34,14 @@
             width: 100%;
             margin: 0 10px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #555;
         }
-        
+
         input[type="number"] {
             width: 100%;
             padding: 8px;
@@ -49,24 +50,24 @@
             font-size: 14px;
             box-sizing: border-box;
         }
-        
+
         input[type="number"]:focus {
             border-color: #4CAF50;
             outline: none;
         }
-        
+
         .display-section {
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid #eee;
         }
-        
+
         .display-buttons {
             display: flex;
             gap: 10px;
             justify-content: center;
         }
-        
+
         button {
             padding: 10px 20px;
             border: none;
@@ -75,21 +76,21 @@
             font-size: 14px;
             font-weight: bold;
         }
-        
+
         .display-btn {
             background-color: #4CAF50;
             color: white;
         }
-        
+
         .display-btn:hover {
             background-color: #45a049;
         }
-        
+
         .display-btn:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        
+
         .info {
             text-align: center;
             color: #666;
@@ -98,6 +99,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="input-group">
@@ -110,7 +112,7 @@
                 <input type="number" id="gold-buy" placeholder="請輸入飾金買進">
             </div>
         </div>
-        
+
         <div class="input-group">
             <div>
                 <label for="piece-sold">條塊賣出：</label>
@@ -121,7 +123,7 @@
                 <input type="number" id="piece-buy" placeholder="請輸入條塊買進">
             </div>
         </div>
-        
+
         <div class="input-group">
             <div>
                 <label for="platinum-sold">白金(Pt900)賣出：</label>
@@ -132,18 +134,7 @@
                 <input type="number" id="platinum-buy" placeholder="請輸入白金(Pt900)買進">
             </div>
         </div>
-        
-        <div class="input-group">
-            <div>
-                <label for="silver-sold">賣出：</label>
-                <input type="number" id="silver-sold" placeholder="請輸入賣出">
-            </div>
-            <div>
-                <label for="silver-buy">買進：</label>
-                <input type="number" id="silver-buy" placeholder="請輸入買進">
-            </div>
-        </div>
-        
+
         <div class="display-section">
             <div class="display-buttons">
                 <button class="display-btn" id="display-a" onclick="showDisplay(0)">顯示螢幕 A</button>
@@ -158,27 +149,27 @@
 
     <script>
         const { ipcRenderer } = require('electron');
-        
+
         let availableDisplays = [];
-        
+
         // 取得可用螢幕資訊
         ipcRenderer.send('get-displays');
         ipcRenderer.on('displays-info', (event, displays) => {
             availableDisplays = displays;
             updateDisplayButtons();
         });
-        
+
         function updateDisplayButtons() {
             const btnA = document.getElementById('display-a');
             const btnB = document.getElementById('display-b');
-            
+
             if (availableDisplays.length >= 1) {
                 btnA.disabled = false;
                 btnA.textContent = `顯示螢幕 A (${availableDisplays[0].size.width}x${availableDisplays[0].size.height})`;
             } else {
                 btnA.disabled = true;
             }
-            
+
             if (availableDisplays.length >= 2) {
                 btnB.disabled = false;
                 btnB.textContent = `顯示螢幕 B (${availableDisplays[1].size.width}x${availableDisplays[1].size.height})`;
@@ -187,38 +178,37 @@
                 btnB.textContent = '顯示螢幕 B (無第二螢幕)';
             }
         }
-        
+
         function showDisplay(displayIndex) {
             // 收集輸入資料
             const data = {
                 '飾金': [document.getElementById('gold-sold').value, document.getElementById('gold-buy').value],
                 '條塊': [document.getElementById('piece-sold').value, document.getElementById('piece-buy').value],
-                '白金(Pt900)': [document.getElementById('platinum-sold').value, document.getElementById('platinum-buy').value],
-                '銀': [document.getElementById('silver-sold').value, document.getElementById('silver-buy').value]
+                '白金(Pt900)': [document.getElementById('platinum-sold').value, document.getElementById('platinum-buy').value]
             };
-            
+
             // 檢查是否有輸入資料
             const hasData = Object.values(data).some(value => Array.isArray(value) && value.length > 0);
-            
+
             if (!hasData) {
                 alert('請至少輸入一項價格資料！');
                 return;
             }
-            
+
             // 發送顯示請求
             ipcRenderer.send('show-display', { displayIndex, data });
-            
+
             // 啟用即時更新監聽
             enableRealTimeUpdate();
         }
-        
+
         let updateInterval;
         function enableRealTimeUpdate() {
             // 清除之前的監聽器
             if (updateInterval) {
                 clearInterval(updateInterval);
             }
-            
+
             // 每秒檢查一次資料是否有變化
             let lastData = JSON.stringify(getCurrentData());
             updateInterval = setInterval(() => {
@@ -233,15 +223,15 @@
                 }
             }, 1000);
         }
-        
+
         function getCurrentData() {
             return {
                 '飾金': [document.getElementById('gold-sold').value, document.getElementById('gold-buy').value],
                 '條塊': [document.getElementById('piece-sold').value, document.getElementById('piece-buy').value],
-                '白金(Pt900)': [document.getElementById('platinum-sold').value, document.getElementById('platinum-buy').value],
-                '銀': [document.getElementById('silver-sold').value, document.getElementById('silver-buy').value]
+                '白金(Pt900)': [document.getElementById('platinum-sold').value, document.getElementById('platinum-buy').value]
             };
         }
     </script>
 </body>
+
 </html>
