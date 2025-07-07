@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win portable",
+    "build": "electron-builder --win --ia32",
     "dist": "electron-builder --publish=never"
   },
   "author": "Hank",
@@ -40,7 +40,7 @@
     }
   },
   "devDependencies": {
-    "electron": "^36.5.0",
-    "electron-builder": "^26.0.12"
+    "electron": "22.3.27",
+    "electron-builder": "^24.0.0"
   }
 }
